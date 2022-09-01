@@ -1,0 +1,14 @@
+[
+    {
+        "target": {
+            "package_name": "com.arta.artazine.uat",
+            "sha256_cert_fingerprints": [
+                "71:DB:C2:15:DC:A2:DB:24:FD:A9:3C:08:28:8B:6A:0F:63:05:24:DB:71:FD:65:4D:DB:9D:FE:BC:95:7D:BD:2C"
+            ],
+            "namespace": "android_app"
+        },
+        "relation": [
+            "delegate_permission/common.handle_all_urls"
+        ]
+    }
+]
