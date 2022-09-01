@@ -1,0 +1,17 @@
+{
+    "applinks": {
+        "details": [
+            {
+                "appIDs": [
+                    "6QJZDJ56V3.com.arta.artazine.uat"
+                ],
+                "components": [
+                    {
+                        "/": "*",
+                        "comment": "Matches any path"
+                    }
+                ]
+            }
+        ]
+    }
+}
