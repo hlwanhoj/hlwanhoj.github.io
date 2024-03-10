@@ -1,0 +1,96 @@
+body {
+    font-family: "Overpass", sans-serif;
+    margin: 0 32px;
+}
+
+#intro-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-transform: uppercase;
+    height: 100vh;
+
+    h1 {
+        font-size: 24px;
+        font-weight: 100;
+        margin: 0;
+    }
+    
+    h2 {
+        font-size: 16px;
+        font-weight: 100;
+        margin: 0;
+    }
+}
+
+#about-section {
+    text-transform: uppercase;
+    height: 100vh;
+    font-size: 36px;
+    font-weight: 100;
+}
+
+#project-section {
+    font-weight: 100;
+    margin-left: 240px;
+
+    > h2 {
+        font-size: 36px;
+        font-weight: 100;
+
+        > span {
+            font-weight: 400;
+        }
+    }
+
+    > .container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        row-gap: 24px;
+        column-gap: 24px;
+
+        > .item {
+            display: inline-block;
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border-radius: 10%;
+            border: 1px rgb(236, 236, 236) solid;
+            overflow: hidden;
+
+            > img {
+                display: block;
+                width: 100%;
+            }
+
+            > span {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                bottom: 0px;
+                padding: 6px 0;
+                background-color: #0000001f;
+                opacity: 0;
+            }
+        }
+    }
+}
+
+#contact-section {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > .icon {
+        display: inline-block;
+        margin-left: 12px;
+        margin-right: 12px;
+
+        > img {
+            height: 32px;
+        }
+    }
+}

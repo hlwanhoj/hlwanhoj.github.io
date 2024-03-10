@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import WebGL from 'three/addons/capabilities/WebGL.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { gsap } from "gsap";
 
 
 const scene = new THREE.Scene();
@@ -8,7 +9,8 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 var counter = 0;
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// document.body.appendChild(renderer.domElement);
+scene.background = new THREE.Color( 0xffffff );
 
 // Add axes helper for debugging
 const axesHelper = new THREE.AxesHelper( 5 );
@@ -38,6 +40,26 @@ if (WebGL.isWebGLAvailable()) {
     const warning = WebGL.getWebGLErrorMessage();
     document.getElementById('container').appendChild(warning);
 }
+
+const projectItems = gsap.utils.toArray("#project-section .item");
+projectItems.forEach((item) => {
+    const itemTitle = item.querySelector("span");
+    if (itemTitle === null) { return; }
+
+    const tl = gsap
+      .timeline({
+        paused: true
+      })
+      .to(itemTitle, { duration: 0.33, ease: "power2.inOut", opacity: 1 });
+    item.addEventListener("mouseenter", function () {
+      tl.play();
+    });
+  
+    item.addEventListener("mouseleave", function () {
+      tl.reverse();
+    });
+  });
+  
 
 function animate() {
     requestAnimationFrame(animate);

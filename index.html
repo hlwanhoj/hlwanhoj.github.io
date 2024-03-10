@@ -3,11 +3,53 @@
 	<head>
 		<meta charset="utf-8">
 		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
-		</style>
+        <link href="src/main.css" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@100;400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,100,0,0" />
 	</head>
 	<body>
+        <div id="intro-section">
+            <div>
+                <h1>Wan Ho Lun</h1>
+                <h2>Front-end Developer</h2>
+            </div>
+        </div>
+        <div id="about-section">
+            <div>
+                <p>Some texts</p>
+                <p>Some texts</p>
+                <p>Some texts</p>
+            </div>
+        </div>
+        <div id="project-section">
+            <h2>I <span>&lt;code&sol;&gt;</span> Mobile Apps</h2>
+            <div class="container">
+                <a class="item" href="https://apps.apple.com/hk/app/k11-hk/id920299203" target="_blank">
+                    <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple112/v4/cf/7a/a5/cf7aa5af-06ef-4737-edfe-18ad2600f8c9/AppIcon-K11HK-0-0-1x_U007ephone-0-85-220.png/460x0w.webp" alt="">
+                    <span>K11 HK</span>
+                </a>
+                <a class="item" href="https://apps.apple.com/hk/app/d-park/id1095914108" target="_blank">
+                    <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple112/v4/ee/a8/c4/eea8c452-11df-4007-dc23-9e364153ab53/AppIcon-DPARK-0-0-1x_U007ephone-0-85-220.png/460x0w.webp" alt="">
+                    <span>D • Park</span>
+                </a>
+                <a class="item" href="https://apps.apple.com/hk/app/k11-hk/id920299203?l=en-GB" target="_blank">
+                    <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple112/v4/cf/7a/a5/cf7aa5af-06ef-4737-edfe-18ad2600f8c9/AppIcon-K11HK-0-0-1x_U007ephone-0-85-220.png/460x0w.webp" alt="">
+                </a>
+                <a class="item" href="https://apps.apple.com/hk/app/k11-hk/id920299203?l=en-GB" target="_blank">
+                    <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple112/v4/cf/7a/a5/cf7aa5af-06ef-4737-edfe-18ad2600f8c9/AppIcon-K11HK-0-0-1x_U007ephone-0-85-220.png/460x0w.webp" alt="">
+                </a>
+            </div>
+        </div>
+        <div id="contact-section">
+            <a class="icon" href="">
+                <img src="assets/mail_social_icon.svg" alt="mail">
+            </a>
+            <a class="icon" href="">
+                <img src="assets/linkedin_social_icon.svg" alt="linkedin">
+            </a>
+        </div>
         <div id="container"></div>
 		<script type="module" src="src/main.js"></script>
 	</body>
