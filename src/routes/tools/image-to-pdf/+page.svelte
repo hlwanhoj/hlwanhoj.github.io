@@ -29,6 +29,47 @@
 	let status = $state('');
 	let statusType = $state<'error' | 'success' | ''>('');
 
+	function handleDragZoneOnDragOver(event: DragEvent) {
+		event.preventDefault();
+		isDragOver = true;
+	}
+
+	function handleDragZoneOnDragLeave() {
+		isDragOver = false;
+	}
+
+	function handleDragZoneOnDrop(event: DragEvent) {
+		event.preventDefault();
+		isDragOver = false;
+		void handleFiles(event.dataTransfer?.files ?? null);
+	}
+
+	function handleDragZoneInputOnChange(event: Event) {
+		const input = event.currentTarget as HTMLInputElement;
+		void handleFiles(input.files);
+	}
+
+	function handleThumbOnDragStart(event: DragEvent, index: number) {
+		dragSrcIndex = index;
+	}
+
+	function handleThumbOnDragEnd() {
+		dragSrcIndex = null;
+	}
+
+	function handleThumbOnDragOver(event: DragEvent) {
+		event.preventDefault();
+	}
+
+	function handleThumbOnDrop(event: DragEvent, targetIndex: number) {
+		event.preventDefault();
+		reorderImages(targetIndex);
+	}
+
+	function handleThumbDeleteButtonOnClick(index: number) {
+		images = images.filter((_, currentIndex) => currentIndex !== index);
+	}
+
 	function sortImagesByFileName() {
 		images = [...images].sort((a, b) => collator.compare(a.file.name, b.file.name));
 	}
@@ -210,7 +251,9 @@
 			pdfDoc.setCreationDate(new Date());
 
 			const pdfBytes = await pdfDoc.save();
-			const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+			const pdfBuffer = new Uint8Array(pdfBytes.length);
+			pdfBuffer.set(pdfBytes);
+			const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
 			const url = URL.createObjectURL(blob);
 			const anchor = document.createElement('a');
 			anchor.href = url;
@@ -232,22 +275,25 @@
 
 <div class="container">
 	<h1 class="text-3xl font-bold mb-6">圖片合併 PDF 工具</h1>
-	<p class="subtitle">
-		上傳多張圖片，自動依檔案名稱排序，並可自訂 PDF 標題／作者等中繼資料，全部在瀏覽器本機處理，圖片不會上傳到任何伺服器。
-	</p>
+	<div class="subtitle mb-9">
+		<p class="">
+			上傳多張圖片，自動依檔案名稱排序，並可自訂 PDF 標題／作者等中繼資料。
+		</p>
+		<p>
+			全部在瀏覽器本機處理，圖片不會上傳到任何伺服器。
+		</p>
+	</div>
 
 	<div class="panel">
 		<h2>1. 上傳圖片</h2>
 		<div
 			class:dragover={isDragOver}
 			class="dropzone"
-			on:click={() => fileInputEl?.click()}
-			on:dragover|preventDefault={() => (isDragOver = true)}
-			on:dragleave={() => (isDragOver = false)}
-			on:drop|preventDefault={(event) => {
-				isDragOver = false;
-				void handleFiles(event.dataTransfer?.files ?? null);
-			}}
+			role="group" aria-label="drop zone"
+			onclick={() => fileInputEl?.click()}
+			ondragover={handleDragZoneOnDragOver}
+			ondragleave={handleDragZoneOnDragLeave}
+			ondrop={handleDragZoneOnDrop}
 		>
 			<div>拖放圖片到這裡，或點擊選擇檔案</div>
 			<div class="hint">
@@ -259,9 +305,7 @@
 				type="file"
 				accept="image/*"
 				multiple
-				on:change={(event) => {
-					void handleFiles((event.currentTarget as HTMLInputElement).files);
-				}}
+				onchange={handleDragZoneInputOnChange}
 			/>
 		</div>
 
@@ -271,14 +315,10 @@
 					<div
 						class="thumb"
 						draggable="true"
-						on:dragstart={() => {
-							dragSrcIndex = index;
-						}}
-						on:dragend={() => {
-							dragSrcIndex = null;
-						}}
-						on:dragover|preventDefault
-						on:drop|preventDefault={() => reorderImages(index)}
+						ondragstart={(event) => handleThumbOnDragStart(event, index)}
+						ondragend={handleThumbOnDragEnd}
+						ondragover={handleThumbOnDragOver}
+						ondrop={(event) => handleThumbOnDrop(event, index)}
 					>
 						<span class="idx">{index + 1}</span>
 						<img src={image.url} alt={image.file.name} />
@@ -286,9 +326,7 @@
 						<button
 							type="button"
 							class="del"
-							on:click={() => {
-								images = images.filter((_, currentIndex) => currentIndex !== index);
-							}}
+							onclick={() => handleThumbDeleteButtonOnClick(index)}
 						>
 							✕
 						</button>
@@ -353,11 +391,11 @@
 	<div class="panel">
 		<h2>3. 產生 PDF</h2>
 		<div class="actions">
-			<button type="button" class="primary" disabled={images.length === 0} on:click={generatePdf}>
+			<button type="button" class="primary" disabled={images.length === 0} onclick={generatePdf}>
 				產生並下載 PDF
 			</button>
-			<button type="button" class="secondary" on:click={resortImages}>依檔名重新排序</button>
-			<button type="button" class="secondary" on:click={clearAll}>清空全部</button>
+			<button type="button" class="secondary" onclick={resortImages}>依檔名重新排序</button>
+			<button type="button" class="secondary" onclick={clearAll}>清空全部</button>
 		</div>
 
 		{#if status}
