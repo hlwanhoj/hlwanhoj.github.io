@@ -1,3 +1,11 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@theme {
+    --color-primary: var(--color-teal-400);
+    --color-primary-selected: var(--color-teal-500);
+    --color-primary-hover: var(--color-teal-200);
+    --color-primary-disabled: var(--color-zinc-200);
+    --color-primary-disabled-text: var(--color-zinc-300);
+}

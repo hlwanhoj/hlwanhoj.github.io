@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { PDFDocument } from 'pdf-lib';
+	import Panel from './Panel.svelte';
+	import FormGroup from './FormGroup.svelte';
+	import PrimaryButton from './PrimaryButton.svelte';
+	import SecondaryButton from './SecondaryButton.svelte';
 
 	type ImageItem = {
 		file: File;
@@ -14,6 +18,30 @@
 		letter: [612, 792]
 	};
 	const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+
+	function shuffle<T>(items: T[]): T[] {
+		const shuffled = [...items];
+		for (let index = shuffled.length - 1; index > 0; index -= 1) {
+			const randomIndex = Math.floor(Math.random() * (index + 1));
+			[shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+		}
+		return shuffled;
+	}
+
+	function createTestImages(): ImageItem[] {
+		return Array.from({ length: 10 }, (_, index) => {
+			const width = index % 2 === 0 ? 1200 : 900;
+			const height = index % 2 === 0 ? 900 : 1200;
+			const hue = (index * 37) % 360;
+			const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="hsl(${hue} 65% 45%)"/><circle cx="${width / 2}" cy="${height / 2}" r="${Math.min(width, height) / 4}" fill="hsl(${(hue + 60) % 360} 75% 75%)"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="96" fill="white">Test ${index + 1}</text></svg>`;
+			const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+			const file = new File([svg], `test-image-${String(index + 1).padStart(2, '0')}.svg`, {
+				type: 'image/svg+xml'
+			});
+
+			return { file, url, width, height };
+		});
+	}
 
 	let images = $state<ImageItem[]>([]);
 	let dragSrcIndex = $state<number | null>(null);
@@ -179,7 +207,7 @@
 		let outputName = fileName.trim() || 'merged.pdf';
 		if (!outputName.toLowerCase().endsWith('.pdf')) outputName += '.pdf';
 
-		status = '正在用 pdf-lib 產生 PDF，請稍候...';
+		status = '正在產生PDF...';
 		statusType = '';
 
 		try {
@@ -246,8 +274,7 @@
 			if (subject) pdfDoc.setSubject(subject);
 			if (keywords.length) pdfDoc.setKeywords(keywords);
 
-			pdfDoc.setCreator('Images-to-PDF Tool (pdf-lib)');
-			pdfDoc.setProducer('pdf-lib');
+			pdfDoc.setCreator(author);
 			pdfDoc.setCreationDate(new Date());
 
 			const pdfBytes = await pdfDoc.save();
@@ -267,28 +294,24 @@
 			statusType = 'success';
 		} catch (error) {
 			console.error(error);
-			status = '❌ 產生 PDF 時發生錯誤：' + (error instanceof Error ? error.message : 'Unknown error');
+			status = '❌ 發生錯誤：' + (error instanceof Error ? error.message : 'Unknown error');
 			statusType = 'error';
 		}
 	}
 </script>
 
 <div class="container">
-	<h1 class="text-3xl font-bold mb-6">圖片合併 PDF 工具</h1>
+	<h1 class="text-3xl font-bold mb-6">圖片轉 PDF</h1>
 	<div class="subtitle mb-9">
-		<p class="">
-			上傳多張圖片，自動依檔案名稱排序，並可自訂 PDF 標題／作者等中繼資料。
-		</p>
 		<p>
 			全部在瀏覽器本機處理，圖片不會上傳到任何伺服器。
 		</p>
 	</div>
 
-	<div class="panel">
-		<h2>1. 上傳圖片</h2>
+	<Panel title="1. 上傳圖片">
 		<div
 			class:dragover={isDragOver}
-			class="dropzone"
+			class="px-36 py-16 bg-white/20 text-center"
 			role="group" aria-label="drop zone"
 			onclick={() => fileInputEl?.click()}
 			ondragover={handleDragZoneOnDragOver}
@@ -296,11 +319,12 @@
 			ondrop={handleDragZoneOnDrop}
 		>
 			<div>拖放圖片到這裡，或點擊選擇檔案</div>
-			<div class="hint">
+			<div class="mt-2 text-sm">
 				支援 JPG / PNG / WebP / GIF / BMP，可一次選多張，會自動依檔案名稱排序（WebP 會以 PNG
 				格式處理以保留透明度）
 			</div>
 			<input
+				class="hidden"
 				bind:this={fileInputEl}
 				type="file"
 				accept="image/*"
@@ -310,22 +334,25 @@
 		</div>
 
 		{#if images.length > 0}
-			<div class="thumbs">
+			<div class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-4">
 				{#each images as image, index (image.file.name + image.file.lastModified + index)}
 					<div
-						class="thumb"
+						class="relative aspect-square cursor-grab overflow-hidden bg-white"
 						draggable="true"
 						ondragstart={(event) => handleThumbOnDragStart(event, index)}
 						ondragend={handleThumbOnDragEnd}
 						ondragover={handleThumbOnDragOver}
 						ondrop={(event) => handleThumbOnDrop(event, index)}
 					>
-						<span class="idx">{index + 1}</span>
-						<img src={image.url} alt={image.file.name} />
-						<span class="fname" title={image.file.name}>{image.file.name}</span>
+						<span class="absolute left-1 top-1 bg-black/30 px-1.5 py-0.5 text-[0.6rem]">{index + 1}</span>
+						<img class="block h-full w-full object-cover" src={image.url} alt={image.file.name} />
+						<span
+							class="absolute inset-x-0 bottom-0 overflow-hidden bg-black/30 px-1.5 py-0.75 text-[0.6rem] text-ellipsis whitespace-nowrap"
+							title={image.file.name}>{image.file.name}</span
+						>
 						<button
 							type="button"
-							class="del"
+							class="absolute right-1 top-1 flex h-5 w-5 cursor-pointer items-center justify-center border-none bg-red-500 text-xs leading-none hover:bg-rose-600"
 							onclick={() => handleThumbDeleteButtonOnClick(index)}
 						>
 							✕
@@ -334,292 +361,92 @@
 				{/each}
 			</div>
 		{:else}
-			<div class="empty-hint">尚未加入任何圖片</div>
+			<div class="mt-4 text-sm text-rose-600">尚未加入任何圖片</div>
 		{/if}
-	</div>
+	</Panel>
 
-	<div class="panel">
-		<h2>2. PDF 中繼資料設定</h2>
+	<Panel title="2. PDF 中繼資料設定">
 		<div class="form-row">
-			<div class="form-group">
-				<label for="pdfTitle">PDF 標題 (Title)</label>
+			<FormGroup label="標題 (Title)" for="pdfTitle">
 				<input id="pdfTitle" type="text" bind:value={pdfTitle} placeholder="例如：出差收據合輯" />
-			</div>
-			<div class="form-group">
-				<label for="pdfAuthor">PDF 作者 (Author)</label>
+			</FormGroup>
+			<FormGroup label="作者 (Author)" for="pdfAuthor">
 				<input id="pdfAuthor" type="text" bind:value={pdfAuthor} placeholder="例如：你的名字" />
-			</div>
+			</FormGroup>
 		</div>
 
 		<div class="form-row">
-			<div class="form-group">
-				<label for="pdfSubject">主旨 (Subject) — 選填</label>
+			<FormGroup label="主旨 (Subject) — 選填" for="pdfSubject">
 				<input
 					id="pdfSubject"
 					type="text"
 					bind:value={pdfSubject}
 					placeholder="例如：2026 年 8 月出差單據"
 				/>
-			</div>
-			<div class="form-group">
-				<label for="pdfKeywords">關鍵字 (Keywords) — 選填，以逗號分隔</label>
+			</FormGroup>
+			<FormGroup label="關鍵字 (Keywords) — 選填，以逗號分隔" for="pdfKeywords">
 				<input
 					id="pdfKeywords"
 					type="text"
 					bind:value={pdfKeywords}
 					placeholder="例如：收據, 出差, 報銷"
 				/>
-			</div>
+			</FormGroup>
 		</div>
 
 		<div class="form-row">
-			<div class="form-group">
-				<label for="pageSize">頁面尺寸</label>
+			<FormGroup label="頁面尺寸" for="pageSize">
 				<select id="pageSize" bind:value={pageSize}>
 					<option value="a4">A4</option>
 					<option value="letter">Letter</option>
 					<option value="fit">貼合圖片原尺寸</option>
 				</select>
-			</div>
-			<div class="form-group">
-				<label for="fileName">下載檔案名稱</label>
+			</FormGroup>
+			<FormGroup label="下載檔案名稱" for="fileName">
 				<input id="fileName" type="text" bind:value={fileName} placeholder="output.pdf" />
-			</div>
+			</FormGroup>
 		</div>
-	</div>
+	</Panel>
 
-	<div class="panel">
-		<h2>3. 產生 PDF</h2>
-		<div class="actions">
-			<button type="button" class="primary" disabled={images.length === 0} onclick={generatePdf}>
+	<Panel title="3. 產生 PDF">
+		<div class="flex flex-wrap items-center gap-3">
+			<PrimaryButton disabled={images.length === 0} onclick={generatePdf}>
 				產生並下載 PDF
-			</button>
-			<button type="button" class="secondary" onclick={resortImages}>依檔名重新排序</button>
-			<button type="button" class="secondary" onclick={clearAll}>清空全部</button>
+			</PrimaryButton>
+			<SecondaryButton onclick={resortImages}>
+				依檔名重新排序
+			</SecondaryButton>
+			<SecondaryButton onclick={clearAll}>
+				清空全部
+			</SecondaryButton>
 		</div>
 
 		{#if status}
 			<div class={`status ${statusType}`}>{status}</div>
 		{/if}
-	</div>
-
-	<footer>所有處理皆在你的瀏覽器內完成（pdf-lib，純前端），不會上傳任何圖片。</footer>
+	</Panel>
 </div>
 
 <style>
-	.panel {
-		background: #1a1d24;
-		border: 1px solid #2b2f3a;
-		border-radius: 12px;
-		padding: 20px;
-		margin-bottom: 20px;
-	}
+    @reference 'tailwindcss';
 
-	.panel h2 {
-		font-size: 1rem;
-		margin: 0 0 12px;
-		color: #e8eaed;
-	}
-
-	.dropzone {
-		border: 2px dashed #2b2f3a;
-		border-radius: 10px;
-		padding: 36px 16px;
-		text-align: center;
-		cursor: pointer;
-		transition: 0.2s;
-		color: #9aa0ac;
-	}
-
-	.dropzone.dragover {
-		border-color: #4f8cff;
-		background: rgba(79, 140, 255, 0.08);
-		color: #e8eaed;
-	}
-
-	.dropzone input {
-		display: none;
-	}
-
-	.dropzone .hint {
-		font-size: 0.8rem;
-		margin-top: 6px;
-		line-height: 1.5;
+	.dragover {
+		background-color: var(--color-primary-hover);
 	}
 
 	.form-row {
-		display: flex;
-		gap: 16px;
-		flex-wrap: wrap;
-		margin-bottom: 14px;
-	}
-
-	.form-group {
-		flex: 1;
-		min-width: 220px;
-	}
-
-	.form-group label {
-		display: block;
-		font-size: 0.85rem;
-		color: #9aa0ac;
-		margin-bottom: 6px;
-	}
-
-	.form-group input,
-	.form-group select {
-		width: 100%;
-		padding: 10px 12px;
-		border-radius: 8px;
-		border: 1px solid #2b2f3a;
-		background: #12141a;
-		color: #e8eaed;
-		font-size: 0.9rem;
-	}
-
-	.form-group input:focus,
-	.form-group select:focus {
-		outline: none;
-		border-color: #4f8cff;
-	}
-
-	.thumbs {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-		gap: 12px;
-		margin-top: 16px;
-	}
-
-	.thumb {
-		position: relative;
-		border: 1px solid #2b2f3a;
-		border-radius: 8px;
-		overflow: hidden;
-		background: #12141a;
-		cursor: grab;
-		aspect-ratio: 1 / 1;
-	}
-
-	.thumb img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
-	}
-
-	.thumb .idx {
-		position: absolute;
-		top: 4px;
-		left: 4px;
-		background: rgba(0, 0, 0, 0.65);
-		color: #fff;
-		font-size: 0.7rem;
-		padding: 2px 6px;
-		border-radius: 6px;
-	}
-
-	.thumb .fname {
-		position: absolute;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		background: rgba(0, 0, 0, 0.65);
-		color: #fff;
-		font-size: 0.65rem;
-		padding: 3px 6px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.thumb .del {
-		position: absolute;
-		top: 4px;
-		right: 4px;
-		background: rgba(229, 72, 77, 0.9);
-		color: #fff;
-		border: none;
-		border-radius: 6px;
-		width: 20px;
-		height: 20px;
-		font-size: 0.75rem;
-		cursor: pointer;
-		line-height: 1;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.thumb .del:hover {
-		background: #e5484d;
-	}
-
-	.empty-hint {
-		color: #9aa0ac;
-		font-size: 0.85rem;
-		margin-top: 10px;
-	}
-
-	.actions {
-		display: flex;
-		gap: 12px;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-
-	button.primary {
-		background: #4f8cff;
-		color: #fff;
-		border: none;
-		padding: 12px 22px;
-		border-radius: 8px;
-		font-size: 0.95rem;
-		cursor: pointer;
-		font-weight: 600;
-	}
-
-	button.primary:hover {
-		background: #3a76e8;
-	}
-
-	button.primary:disabled {
-		background: #3a3f4b;
-		cursor: not-allowed;
-	}
-
-	button.secondary {
-		background: transparent;
-		color: #9aa0ac;
-		border: 1px solid #2b2f3a;
-		padding: 12px 18px;
-		border-radius: 8px;
-		cursor: pointer;
-		font-size: 0.9rem;
-	}
-
-	button.secondary:hover {
-		color: #e8eaed;
-		border-color: #9aa0ac;
+		@apply flex flex-wrap gap-4 mb-3;
 	}
 
 	.status {
-		margin-top: 12px;
-		font-size: 0.85rem;
-		color: #9aa0ac;
+		@apply mt-3 text-sm text-neutral-700;
 	}
 
 	.status.error {
-		color: #e5484d;
+		@apply text-rose-600;
 	}
 
 	.status.success {
-		color: #3ec97a;
-	}
-
-	footer {
-		text-align: center;
-		color: #9aa0ac;
-		font-size: 0.75rem;
-		margin-top: 30px;
+		@apply text-emerald-600;
 	}
 </style>
