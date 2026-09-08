@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { PDFDocument } from 'pdf-lib';
-	import Panel from './Panel.svelte';
-	import FormGroup from './FormGroup.svelte';
-	import PrimaryButton from './PrimaryButton.svelte';
-	import SecondaryButton from './SecondaryButton.svelte';
+	import Panel from '$lib/Panel.svelte';
+	import FormGroup from '$lib/FormGroup.svelte';
+	import PrimaryButton from '$lib/PrimaryButton.svelte';
+	import SecondaryButton from '$lib/SecondaryButton.svelte';
 
 	type ImageItem = {
 		file: File;
